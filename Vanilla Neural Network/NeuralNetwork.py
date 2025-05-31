@@ -140,6 +140,22 @@ def preprocess_medical_data(df):
     X_scaled = scaler.fit_transform(X)
 
     return X_scaled, y, scaler, label_encoders
+def calculate_f1_score(y_true, y_pred):
+    # Convert to NumPy arrays if not already
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
+    # True positives, false positives, false negatives
+    tp = np.sum((y_true == 1) & (y_pred == 1))
+    fp = np.sum((y_true == 0) & (y_pred == 1))
+    fn = np.sum((y_true == 1) & (y_pred == 0))
+
+    # Avoid division by zero
+    precision = tp / (tp + fp + 1e-7)
+    recall = tp / (tp + fn + 1e-7)
+
+    f1 = 2 * (precision * recall) / (precision + recall + 1e-7)
+    return f1
 
 # Load and preprocess data
 df = pd.read_csv('dataset.csv')
@@ -168,7 +184,8 @@ for epoch in range(1000):
 
     # Print loss and accuracy every 100 epochs
     if epoch % 100 == 0:
-        print(f'Epoch {epoch}, Loss: {loss:.4f}, Accuracy: {accuracy:.4f}')
+    f1 = calculate_f1_score(y_train, predictions)
+    print(f'Epoch {epoch}, Loss: {loss:.4f}, Accuracy: {accuracy:.4f}, F1 Score: {f1:.4f}')
 
     # Backward pass
     loss_activation.backward(loss_activation.output, y_train)
