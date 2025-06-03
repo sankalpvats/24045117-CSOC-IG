@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, f1_score, precision_recall_curve, auc, confusion_matrix
 
 # Quick data wrangling - drop unused cols & encode
 def prep_data(df):
@@ -86,3 +87,24 @@ for ep in range(3000):
     if ep % 75 == 0:
         acc = (torch.argmax(pred, dim=1) == y_train).float().mean().item()
         print(f"[ep:{ep}] loss={loss.item():.3f}, acc={acc:.2%}")
+
+# ---------------- Evaluation Section ---------------- #
+net.eval()
+with torch.no_grad():
+    test_preds = net(x_test)
+    y_prob = torch.softmax(test_preds, dim=1)[:, 1].numpy()
+    y_pred = torch.argmax(test_preds, dim=1).numpy()
+    y_true = y_test.numpy()
+
+    acc = accuracy_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred)
+    conf = confusion_matrix(y_true, y_pred)
+    precision, recall, _ = precision_recall_curve(y_true, y_prob)
+    pr_auc = auc(recall, precision)
+
+print("\n--- Test Set Evaluation ---")
+print(f"Accuracy: {acc:.4f}")
+print(f"F1 Score: {f1:.4f}")
+print(f"Precision-Recall AUC: {pr_auc:.4f}")
+print("Confusion Matrix:")
+print(conf)
